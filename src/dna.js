@@ -27,36 +27,26 @@ const isDnaUnique = (dnaList = [], dna = []) => {
 
 // create a dna based on the available layers for the given rarity
 // use a random part for each layer
-const createDna = (layers, rarity, rarityWeights) => {
+const createDna = (layers, rarity) => {
   let randNum = [];
-  let rarityWeight = rarityWeights.find(rw => rw.value === rarity);
 
   layers.forEach(layer => {
     let num = Math.floor(
       Math.random() * layer.elementIdsForRarity[rarity].length
     );
-    if (rarityWeight && rarityWeight.layerPercent[layer.id]) {
-      // if there is a layerPercent defined, we want to identify which dna to actually use here (instead of only picking from the same rarity)
-      let rarityForLayer = getRandomRarity(rarityWeight.layerPercent[layer.id]);
-      num = Math.floor(
-        Math.random() * layer.elementIdsForRarity[rarityForLayer].length
-      );
-      randNum.push(layer.elementIdsForRarity[rarityForLayer][num]);
-    } else {
       randNum.push(layer.elementIdsForRarity[rarity][num]);
-    }
   });
   return randNum;
 };
 
-const createUniqueDna = (layers, rarity, rarityWeights, dnaListByRarity) => {
+const createUniqueDna = (layers, rarity, dnaListByRarity) => {
   // calculate the NFT dna by getting a random part for each layer/feature
   // based on the ones available for the given rarity to use during generation
-  let newDna = createDna(layers, rarity, rarityWeights);
+  let newDna = createDna(layers, rarity);
   while (!isDnaUnique(dnaListByRarity[rarity], newDna)) {
     // recalculate dna as this has been used before.
     console.log("found duplicate DNA " + newDna.join("-") + ", recalculate...");
-    newDna = createDna(layers, rarity, rarityWeights);
+    newDna = createDna(layers, rarity);
   }
   console.log("- dna: " + newDna.join("-"));
 

@@ -14,8 +14,6 @@ const {
   layers,
   width,
   height,
-  editionSize,
-  startEditionFrom,
   rarityWeights
 } = require("./input/config.js");
 
@@ -42,48 +40,47 @@ Moralis.start({ serverUrl, appId, masterKey });
 
 // Create generative art by using the canvas api
 const startCreating = async () => {
-  console.log("##################");
-  console.log("# Generative Art #");
-  console.log("# - Generating your NFT collection");
-  console.log("##################");
+    console.log("##################");
+    console.log("# Generative Art #");
+    console.log("# - Generating your NFT collection");
+    console.log("##################");
 
-  // image data collection
-  let imageDataArray = [];
+    // image data collection
+    let imageDataArray = [];
+    for (var i = 0; i < rarityWeights.length; i++) {
+        let rarity = rarityWeights[i];
 
-  // create NFTs from startEditionFrom to editionSize
-  let editionCount = startEditionFrom;
+        // create NFTs from startEditionFrom to editionSize
+        let editionSize = rarity.to;
 
-  while (editionCount <= editionSize) {
-    console.log("-----------------");
-    console.log("Creating %d of %d", editionCount, editionSize);
+        for (let editionCount = rarity.from; editionCount <= rarity.to; editionCount++) {
+            console.log("-----------------");
+            console.log("Creating %d of %d", editionCount, editionSize);
 
-    const handleFinal = async () => {
-      // create image files and return object array of created images
-      [...imageDataArray] = await createFile(
-        canvas,
-        ctx,
-        layers,
-        width,
-        height,
-        editionCount,
-        editionSize,
-        rarityWeights,
+            const handleFinal = async () => {
+                // create image files and return object array of created images
+                [...imageDataArray] = await createFile(
+                    canvas,
+                    ctx,
+                    layers,
+                    width,
+                    height,
+                    editionCount,
+                    editionSize,
+                    rarity.value,
+                    imageDataArray
+                );
+            };
+
+            await handleFinal();
+        }
+    }
+    
+    await compileMetadata(
+        apiUrl,
+        apiKey,
         imageDataArray
-      );
-    };
-
-    await handleFinal();
-    // iterate
-    editionCount++;
-  }
-
-  await compileMetadata(
-    apiUrl,
-    apiKey,
-    editionCount,
-    editionSize,
-    imageDataArray
-  );
+    );
 
   console.log();
   console.log("#########################################");

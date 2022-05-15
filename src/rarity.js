@@ -1,12 +1,10 @@
 const { rarityWeights } = require("../input/config.js");
 
 // creates dnaList object by rarity
-const createDnaListByRarity = rarityWeights => {
+const createDnaListByRarity = rarityName => {
   const dnaListByRarity = [];
 
-  rarityWeights.forEach(rarityWeight => {
-    dnaListByRarity[rarityWeight.value] = [];
-  });
+      dnaListByRarity[rarityName] = [];
 
   return dnaListByRarity;
 };

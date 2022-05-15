@@ -14,8 +14,7 @@ const addRarity = (_id, _from, _to) => {
   const _rarityWeight = {
     value: _id,
     from: _from,
-    to: _to,
-    layerPercent: {},
+    to: _to
   };
   return _rarityWeight;
 };
@@ -86,31 +85,6 @@ const addLayer = (_id, _position, _size) => {
   return elementsForLayer;
 };
 
-// adds layer-specific percentages to use one vs another rarity
-// @param _rarityId - the id of the rarity to specifiy
-// @param _layerId - the id of the layer to specifiy
-// @param _percentages - an object defining the rarities and the percentage with which a given rarity for this layer should be used
-const addRarityPercentForLayer = (_rarityId, _layerId, _percentages) => {
-  let _rarityFound = false;
-  rarityWeights.forEach((_rarityWeight) => {
-    if (_rarityWeight.value === _rarityId) {
-      let _percentArray = [];
-      for (let percentType in _percentages) {
-        _percentArray.push({
-          id: percentType,
-          percent: _percentages[percentType],
-        });
-      }
-      _rarityWeight.layerPercent[_layerId] = _percentArray;
-      _rarityFound = true;
-    }
-  });
-  if (!_rarityFound) {
-    console.log(
-      `rarity ${_rarityId} not found, failed to add percentage information`
-    );
-  }
-};
 
 /**************************************************************
  * BEGIN COLLECTION CONFIG
@@ -121,24 +95,19 @@ const width = 1000;
 // image height in pixels
 const height = 1000;
 // description for NFT in metadata file
-const description = "Moralis Mutants - Survivors of Rekt City";
+const description = "Aiamond Voting NFT Test";
 // base url in case no unique metadata file i.e IPFS
-const baseImageUri = "YOUR_MORALIS_SERVER_URL";
-// id for edition to start from
-const startEditionFrom = 1;
-// amount of NFTs to generate in edition
-const editionSize = 10;
+const baseImageUri = process.env.SERVER_URL;
 // prefix to add to edition dna ids (to distinguish dna counts from different generation processes for the same collection)
 const editionDnaPrefix = 0;
 
 // create required weights
 // for each weight, call 'addRarity' with the id and from which to which element this rarity should be applied
 let rarityWeights = [
-  /* 
-  addRarity("super_rare", 1, 1),
-  addRarity("rare", 1, 1),
-  */
-  addRarity("original", 1, editionSize),
+    addRarity("founder", 1, 1),
+    addRarity("gold", 1, 2),
+    addRarity("silver", 1, 3),
+    addRarity("bronze", 1, 4),
 ];
 
 // create required layers
@@ -146,23 +115,7 @@ let rarityWeights = [
 // the id would be the name of the folder in your input directory, e.g. 'ball' for ./input/ball
 const layers = [
   addLayer("Background", { x: 0, y: 0 }, { width: width, height: height }),
-  addLayer("Base Torso"),
-  addLayer("Base Head"),
-  addLayer("Torso"),
-  addLayer("Arms"),
-  addLayer("Mouths"),
-  addLayer("Eyes"),
-  addLayer("Accessories"),
-  addLayer("Noses"),
 ];
-
-// provide any specific percentages that are required for a given layer and rarity level
-// all provided options are used based on their percentage values to decide which layer to select from
-addRarityPercentForLayer("original", "Eyes", {
-  super_rare: 0,
-  rare: 0,
-  original: 100,
-});
 
 module.exports = {
   layers,
@@ -170,7 +123,5 @@ module.exports = {
   height,
   description,
   baseImageUri,
-  editionSize,
-  startEditionFrom,
   rarityWeights,
 };
