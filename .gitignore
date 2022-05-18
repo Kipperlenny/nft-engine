@@ -107,3 +107,5 @@ dist
 
 # Misc
 .DS_Store
+
+.vs
