@@ -79,7 +79,7 @@ const createFile = async (
         attributesList = [];
 
         attributesList.push({
-            name: editionCount,
+            name: rarityName + " " + editionCount,
             rarity: elementArray[0].rarity
         });
 
