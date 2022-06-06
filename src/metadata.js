@@ -14,7 +14,6 @@ const writeMetaData = (metadataList) => {
 const generateMetadata = (dna, edition, attributesList, path) => {
   let dateTime = Date.now();
   let tempMetadata = {
-    dna: dna.join(""),
     name: `#${edition}`,
     description: description,
     image: path || baseImageUri,
@@ -41,14 +40,14 @@ const uploadMetadata = async (
         let id = imageElement.editionCount.toString();
         let rarityName = imageElement.rarity.toString();
         let paddedHex = (
-            "0000000000000000000000000000000000000000000000000000000000000000" + rarityName + "00" + id
+            "000000000000000000000000000000000000000000000000000000000000000000" + id
         ).slice(-64);
-        let filename = rarityName + "_" + id + ".json";
+        let filename = paddedHex + ".json";
 
     let filetype = "base64";
     imageDataArray[
       i
-    ].filePath = `https://ipfs.moralis.io:2053/ipfs/${imageCID}/images/${paddedHex}.png`;
+    ].filePath = `https://gateway.pinata.cloud/ipfs/${imageCID}/${rarityName}/${paddedHex}.png`;
     //imageDataArray[i].image_file = res.data[i].content;
 
     // do something else here after firstFunction completes
@@ -60,7 +59,7 @@ const uploadMetadata = async (
     );
     metadataList.push(nftMetadata);
 
-        // upload metafile data to Moralis
+    // upload metafile data to Moralis
     const metaFile = new Moralis.File(filename, {
       base64: Buffer.from(
         JSON.stringify(metadataList.find((meta) => meta.edition == id))
@@ -69,54 +68,62 @@ const uploadMetadata = async (
 
     // save locally as file
     fs.writeFileSync(
-      `./output/${filename}`,
-      JSON.stringify(metadataList.find((meta) => meta.edition == id))
+        `./output/${rarityName}/${filename}`,
+        JSON.stringify(metadataList.find((meta) => meta.edition == id))
     );
 
     // reads output folder for json files and then adds to IPFS object array
     promiseArray.push(
       new Promise((res, rej) => {
-        fs.readFile(`./output/${rarityName}_${id}.json`, (err, data) => {
-          if (err) rej();
-          ipfsArray.push({
-            path: `metadata/${paddedHex}.json`,
-            content: data.toString("base64"),
-          });
-          res();
+          fs.readFile(`./output/${rarityName}/${filename}`, (err, data) => {
+            if (err) rej();
+            if (typeof data == "undefined") {
+                console.log("undefined", `./output/${rarityName}/${filename}`);
+            }
+            ipfsArray.push({
+                path: `${rarityName}/${filename}`,
+                content: data.toString("base64"),
+            });
+            res();
         });
       })
     );
-    }
+  }
 
-  // once all promises back then save to IPFS and Moralis database
-  Promise.all(promiseArray).then(() => {
-    axios
-      .post(apiUrl, ipfsArray, {
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-        headers: {
-          "X-API-Key": xAPIKey,
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-      })
-      .then((res) => {
-        let metaCID = res.data[0].path.split("/")[4];
-        console.log("META FILE PATHS:", res.data);
-          saveToDb(metaCID, imageCID, imageDataArray);
-        writeMetaData(metadataList);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
+    // once all promises back then save to IPFS and Moralis database
+    await new Promise(resolve => setTimeout(resolve, 1005));
+    Promise.all(promiseArray).then(async () => {
+        const chunkSize = 100;
+        for (let i = 0; i < ipfsArray.length; i += chunkSize) {
+            await new Promise(resolve => setTimeout(resolve, 1005));
+            const chunk = ipfsArray.slice(i, i + chunkSize);
+            axios.post(apiUrl, chunk, {
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                headers: {
+                    "X-API-Key": xAPIKey,
+                    "content-type": "application/json",
+                    accept: "application/json",
+                },
+            }).then(async (res) => {
+                let metaCID = res.data[0].path.split("/")[4];
+                console.log("META FILE PATHS:", res.data);
+                saveToDb(metaCID, imageCID, imageDataArray);
+                await new Promise(resolve => setTimeout(resolve, 1005));
+                writeMetaData(metadataList);
+            }).catch((err) => {
+                console.log(err);
+            });
+        }
+    });
+    await new Promise(resolve => setTimeout(resolve, 1005));
 };
 
 // compile metadata (reads output folder images)
 const compileMetadata = async (
-  apiUrl,
+    apiUrl,
     xAPIKey,
-  imageDataArray
+    imageDataArray
 ) => {
     ipfsArray = [];
     promiseArray = [];
@@ -126,16 +133,19 @@ const compileMetadata = async (
         let id = imageElement.editionCount.toString();
         let rarityName = imageElement.rarity.toString();
         let paddedHex = (
-            "0000000000000000000000000000000000000000000000000000000000000000" + rarityName + "00" + id
+            "000000000000000000000000000000000000000000000000000000000000000000" + id
         ).slice(-64);
 
         // reads output folder for images and adds to IPFS object metadata array (within promise array)
         promiseArray.push(
             new Promise((res, rej) => {
-                fs.readFile(`./output/${rarityName}_${id}.png`, (err, data) => {
+                fs.readFile(`./output/${rarityName}/${paddedHex}.png`, (err, data) => {
                     if (err) rej();
+                    if (!data) {
+                        console.log(`./output/${rarityName}/${paddedHex}.png`);
+                    }
                     ipfsArray.push({
-                        path: `images/${paddedHex}.png`,
+                        path: `${rarityName}/${paddedHex}.png`,
                         content: data.toString("base64"),
                     });
                     res();
@@ -144,28 +154,35 @@ const compileMetadata = async (
         );
     }
 
-  // once all promises then upload IPFS object metadata array
-    Promise.all(promiseArray).then(() => {
-    axios
-      .post(apiUrl, ipfsArray, {
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-        headers: {
-          "X-API-Key": xAPIKey,
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-      })
-      .then((res) => {
-        console.log("IMAGE FILE PATHS:", res.data);
-        let imageCID = res.data[0].path.split("/")[4];
-        console.log("IMAGE CID:", imageCID);
-        // pass folder CID to meta data
-        uploadMetadata(apiUrl, xAPIKey, imageCID, imageDataArray);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    // once all promises then upload IPFS object metadata array
+    await new Promise(resolve => setTimeout(resolve, 2010));
+    Promise.all(promiseArray).then(async () => {
+        const chunkSize = 100;
+        for (let i = 0; i < ipfsArray.length; i += chunkSize) {
+            const chunk = ipfsArray.slice(i, i + chunkSize);
+            await new Promise(resolve => setTimeout(resolve, 1005));
+            axios.post(apiUrl, chunk, {
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                headers: {
+                  "X-API-Key": xAPIKey,
+                  "content-type": "application/json",
+                  accept: "application/json",
+                }
+            })
+            .then(async (res) => {
+                console.log("IMAGE FILE PATHS:", res.data);
+                let imageCID = res.data[0].path.split("/")[4];
+                console.log("IMAGE CID:", imageCID);
+
+                // pass folder CID to meta data
+                await new Promise(resolve => setTimeout(resolve, 2010));
+                uploadMetadata(apiUrl, xAPIKey, imageCID, imageDataArray);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+        }
   });
 };
 

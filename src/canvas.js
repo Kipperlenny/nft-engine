@@ -20,24 +20,28 @@ const writeCollection = (ctx, sig) => {
 
 // loads an image from the layer path
 // returns the image in a format usable by canvas
-const loadLayerImg = async (layer, rarity) => {
+const loadLayerImg = async (layer, rarity, rarityHumanName) => {
     return new Promise(async resolve => {
-        const image = await loadImage(`${layer.selectedElement.path}`);
-        resolve({ layer: layer, loadedImage: image, rarity: rarity });
+        const image = await loadImage(`D:\\nft-engine\\input\\Background\\1\\Mutant-Background#10.png`);
+        resolve({ layer: layer, loadedImage: image, rarity: rarity, rarityHumanName: rarityHumanName });
     });
 };
 
 const drawBackground = (ctx, width, height, rarity) => {
     switch (rarity) {
+        case 1:
         case "founder":
             ctx.fillStyle = `hsl(302, 100%, 42%)`;
             break;
+        case 2:
         case "gold":
             ctx.fillStyle = `hsl(43, 90%, 50%)`;
             break;
+        case 3:
         case "silver":
             ctx.fillStyle = `hsl(1, 0%, 69%)`;
             break;
+        case 4:
         case "bronze":
             ctx.fillStyle = `hsl(10, 34%, 42%)`;
             break;

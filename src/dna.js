@@ -4,15 +4,13 @@ const { getRandomRarity } = require("./rarity");
 // this maps the layer information to the generated dna and prepares it for
 // drawing on a canvas
 const constructLayerToDna = (_dna = [], _layers = [], _rarity) => {
-  let mappedDnaToLayers = _layers.map((layer, index) => {
-    let selectedElement = layer.elements.find(
-      element => element.id === _dna[index]
-    );
+    let mappedDnaToLayers = _layers.map((layer, index) => {
+
     return {
       location: layer.location,
       position: layer.position,
       size: layer.size,
-      selectedElement: { ...selectedElement, rarity: _rarity }
+      selectedElement: { rarity: _rarity }
     };
   });
   return mappedDnaToLayers;

@@ -9,12 +9,14 @@ const dir = __dirname;
 // @param _id - id of the rarity
 // @param _from - number in the edition to start this rarity from
 // @param _to - number in the edition to generate this rarity to
+// @param _name
 // @return a rarity object used to dynamically generate the NFTs
-const addRarity = (_id, _from, _to) => {
+const addRarity = (_id, _from, _to, _name) => {
   const _rarityWeight = {
     value: _id,
     from: _from,
-    to: _to
+      to: _to,
+    name: _name
   };
   return _rarityWeight;
 };
@@ -99,15 +101,18 @@ const description = "Aiamond Voting NFT Test";
 // base url in case no unique metadata file i.e IPFS
 const baseImageUri = process.env.SERVER_URL;
 // prefix to add to edition dna ids (to distinguish dna counts from different generation processes for the same collection)
-const editionDnaPrefix = 0;
+const editionDnaPrefix = 1;
+
+const seller_fee_basis_points = 400;
+const fee_recipient = "0x36E154E245DAf984d6671AFB17EA89fC979dB5E2";
 
 // create required weights
 // for each weight, call 'addRarity' with the id and from which to which element this rarity should be applied
 let rarityWeights = [
-    addRarity("founder", 1, 1),
-    addRarity("gold", 1, 2),
-    addRarity("silver", 1, 3),
-    addRarity("bronze", 1, 4),
+    addRarity(1, 1, 5, "Founder"), // founder
+    addRarity(2, 6, 15, "Gold"), // gold
+    addRarity(3, 16, 4999, "Silver"), // silver
+    addRarity(4, 5000, 5000, "Bronze"), // bronze
 ];
 
 // create required layers

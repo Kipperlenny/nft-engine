@@ -68,6 +68,7 @@ const startCreating = async () => {
                     editionCount,
                     editionSize,
                     rarity.value,
+                    rarity.name,
                     imageDataArray
                 );
             };
